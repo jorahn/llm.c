@@ -644,7 +644,18 @@ if __name__ == "__main__":
     FLASH = args.flash
 
     # init (and write) the tokenizer
-    enc = tiktoken.get_encoding("gpt2")
+    gpt2_base = tiktoken.get_encoding("gpt2")
+    # add special tokens for instructions
+    enc = tiktoken.Encoding(
+        name="gpt2_im",
+        pat_str=gpt2_base._pat_str,
+        mergeable_ranks=gpt2_base._mergeable_ranks,
+        special_tokens={
+            **gpt2_base._special_tokens,
+            "<|im_start|>": 50257,
+            "<|im_end|>": 50258,
+        }
+    )
     if master_process and args.write_tensors: # tokenizer is technically not tensors but ok
         write_tokenizer(enc, "gpt2_tokenizer.bin")
 
