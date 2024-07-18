@@ -437,7 +437,7 @@ def pad_vocab(tensor, multiple=128, value=0):
     """
     assert tensor.ndim == 2
     V, C = tensor.shape
-    assert V == 50257, "just being defensive here"
+    assert V == 50259, "just being defensive here" # adjusted for instruct-tokens
     # calculate padded vocab size by rounding up to nearest multiple
     Vp = ((V + multiple - 1) // multiple) * multiple
     # pad the tensor
@@ -579,7 +579,7 @@ if __name__ == "__main__":
 
     # args error checking and convenience variables
     B, T = args.batch_size, args.sequence_length
-    assert 1 <= T <= 1024
+    assert 1 <= T <= 2048
     assert args.dtype in {"float32", "float16", "bfloat16"}
     assert args.model in {"gpt2", "gpt2-medium", "gpt2-large", "gpt2-xl", "d12", "d24", "d36", "d48"}
 
@@ -656,17 +656,20 @@ if __name__ == "__main__":
             "<|im_end|>": 50258,
         }
     )
+    print(f"tokenizer has {enc.n_vocab} tokens")
+
     if master_process and args.write_tensors: # tokenizer is technically not tensors but ok
         write_tokenizer(enc, "gpt2_tokenizer.bin")
 
     # init the model, either from scratch or from OpenAI pretrained checkpoint
     if args.model[0] == "d":
         # from scratch (random weights)
+        vocab_size = enc.n_vocab
         model_config = {
-            "d12": GPTConfig(block_size=1024, vocab_size=50257, n_layer=12, n_head=12, n_embd=768),
-            "d24": GPTConfig(block_size=1024, vocab_size=50257, n_layer=24, n_head=16, n_embd=1024),
-            "d36": GPTConfig(block_size=1024, vocab_size=50257, n_layer=36, n_head=20, n_embd=1280),
-            "d48": GPTConfig(block_size=1024, vocab_size=50257, n_layer=48, n_head=25, n_embd=1600),
+            "d12": GPTConfig(block_size=1024, vocab_size=vocab_size, n_layer=12, n_head=12, n_embd=768),
+            "d24": GPTConfig(block_size=1024, vocab_size=vocab_size, n_layer=24, n_head=16, n_embd=1024),
+            "d36": GPTConfig(block_size=1024, vocab_size=vocab_size, n_layer=36, n_head=20, n_embd=1280),
+            "d48": GPTConfig(block_size=1024, vocab_size=vocab_size, n_layer=48, n_head=25, n_embd=1600),
         }[args.model]
         model = GPT(model_config)
     else:

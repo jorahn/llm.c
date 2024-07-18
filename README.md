@@ -1,3 +1,19 @@
+# modifications
+
+- interleave openhermes 2.5 (chatml-formatted) instruction dataset with fineweb-edu 10B
+- gradually increasing proportion of instruction data throughout training (2% -> 80%)
+- add instruction tokens `<|im_start|>` and `<|im_end|>` to tokenizer (`dev/data/..`, `train_gpt2.cu`/`.py`, `data/eval/export_hf.py`)
+- config for gpt-3 (2048 seq-len) 350M on 2x rtx4090 (instead of 8x a100 80g)
+
+Run this first to setup the gpt2_tokenizer.bin:
+`python train_gpt2.py --input_bin "dev/data/edu_fineweb10B_hermes/edu_fineweb_hermes_train_*.bin" --input_val_bin "dev/data/edu_fineweb10B_hermes/edu_fineweb_hermes_val_*.bin" --model d24 --output_dir log_gpt3_350M_edu_hermes_py`
+
+Finally run `scripts/run_gpt3_350M_edu_hermes.sh`
+
+#### TODO: Overfit-one-batch works, but training doesn't seem to converge and gradients explode within 3000 steps
+
+---
+
 # llm.c
 
 LLMs in simple, pure C/CUDA with no need for 245MB of PyTorch or 107MB of cPython. Current focus is on pretraining, in particular reproducing the [GPT-2](https://github.com/openai/gpt-2) and [GPT-3](https://arxiv.org/abs/2005.14165) miniseries, along with a parallel PyTorch reference implementation in [train_gpt2.py](train_gpt2.py). You'll recognize this file as a slightly tweaked [nanoGPT](https://github.com/karpathy/nanoGPT), an earlier project of mine. Currently, llm.c is a bit faster than PyTorch Nightly (by about 7%). In addition to the bleeding edge mainline code in [train_gpt2.cu](train_gpt2.cu), we have a simple reference CPU fp32 implementation in ~1,000 lines of clean code in one file [train_gpt2.c](train_gpt2.c). I'd like this repo to only maintain C and CUDA code. Ports to other languages or repos are very welcome, but should be done in separate repos, and I am happy to link to them below in the "notable forks" section. Developer coordination happens in the [Discussions](https://github.com/karpathy/llm.c/discussions) and on Discord, either the `#llmc` channel on the [Zero to Hero](https://discord.gg/3zy8kqD9Cp) channel, or on `#llmdotc` on CUDA MODE Discord.

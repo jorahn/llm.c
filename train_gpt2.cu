@@ -524,7 +524,7 @@ void gpt_build_from_descriptor(GPT2 *model, const char* descriptor) {
     }
 
     // both GPT-2 and GPT-3 use the same tokenizer with 50257 tokens
-    model->config.vocab_size = 50257;
+    model->config.vocab_size = 50259; // 50257 +2 for <|im_start|> and <|im_end|>
     model->config.padded_vocab_size = 50304; // padded to 128 for CUDA kernel efficiency
 
     // fill in all the parameter tensor dimensions and types

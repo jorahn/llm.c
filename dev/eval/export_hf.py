@@ -58,7 +58,7 @@ def convert(filepath, output, push_to_hub=False, out_dtype="bfloat16"):
     C = model_header[6].item() # channels
     Vp = model_header[7].item() # padded vocab size
 
-    print(f"{version=}, {maxT=}, {V=}, {Vp=}, {L=}, {H=}, {C=}")
+    print(f"v {version=}, seqlen {maxT=}, vocab {V=}, vocab padded {Vp=}, layers {L=}, heads {H=}, channels {C=}")
 
     # Define the shapes of our parameters
     shapes = {
@@ -136,6 +136,11 @@ def convert(filepath, output, push_to_hub=False, out_dtype="bfloat16"):
 
     # Copy over a standard gpt2 tokenizer
     tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
+    # add chatml template and instruct tokens
+    tokenizer.chat_template = "{% if not add_generation_prompt is defined %}{% set add_generation_prompt = false %}{% endif %}{% for message in messages %}{{'<|im_start|>' + message['role'] + '\n' + message['content'] + '<|im_end|>' + '\n'}}{% endfor %}{% if add_generation_prompt %}{{ '<|im_start|>assistant\n' }}{% endif %}"
+    tokenizer.add_tokens(['<|im_start|>', '<|im_end|>'], special_tokens=True)
+    tokenizer.pad_token = tokenizer.eos_token
+
     tokenizer.save_pretrained(output)
 
     if push_to_hub:
@@ -150,6 +155,8 @@ def spin(output):
     tokenizer = AutoTokenizer.from_pretrained(output)
     model = AutoModelForCausalLM.from_pretrained(output, attn_implementation="flash_attention_2", torch_dtype=torch.bfloat16, device_map='cuda')
     model.eval()
+
+    # base model prompt test
     tokens = tokenizer.encode("During photosynthesis in green plants", return_tensors="pt")
     tokens = tokens.to('cuda')
     output = model.generate(tokens, max_new_tokens=64, repetition_penalty=1.3)
@@ -158,6 +165,15 @@ def spin(output):
         print('-'*30)
         print(sample)
 
+    # chatml prompt instruct test
+    tokens = tokenizer.encode("<|im_start|>system\nYou write like a pirate<|im_end|>\n<|im_start|>user\nWhat do green plants do during photosynthesis?<|im_end|>\n<|im_start|>assistant\n", return_tensors="pt")
+    tokens = tokens.to('cuda')
+    output = model.generate(tokens, max_new_tokens=64, repetition_penalty=1.3)
+    samples = tokenizer.batch_decode(output)
+    for sample in samples:
+        print('-'*30)
+        print(sample)
+        
 # -----------------------------------------------------------------------------
 
 if __name__== '__main__':

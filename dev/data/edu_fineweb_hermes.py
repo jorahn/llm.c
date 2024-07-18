@@ -39,10 +39,8 @@ args = parser.parse_args()
 args.version = "10B" # "100B"
 args.type = "edu" # "classic"
 directories = {
-    ("classic", "10B"): ("fineweb10B", "sample-10BT"),
-    ("classic", "100B"): ("fineweb100B", "sample-100BT"),
-    ("edu", "10B"): ("edu_fineweb10B", "sample-10BT"),
-    ("edu", "100B"): ("edu_fineweb100B", "sample-100BT")
+    ("edu", "10B"): ("edu_fineweb10B_hermes", "sample-10BT"),
+    ("edu", "100B"): ("edu_fineweb100B_hermes", "sample-100BT")
 }
 local_dir, remote_name = directories[(args.type, args.version)]
 
@@ -59,10 +57,31 @@ elif args.type =="edu":
     d1 = d1.select_columns(["text"])
     d2 = load_dataset("jrahn/OpenHermes-2.5_chatml", split="train")
     d2 = d2.select_columns(["text"])
+
     # fineweb-edu 10B has 9.7M documents, OpenHermes-2.5_chatml has 1.0M documents
-    p_d1 = len(d1) / (len(d1) + len(d2))
-    fw = interleave_datasets([d1, d2], probabilities=[p_d1, 1-p_d1])
-    # TODO: increase proportion of OpenHermes-2.5_chatml during training in stages to 95%
+
+    # V1: create one interleaved dataset with the same proportions as the original datasets
+    #p_d1 = len(d1) / (len(d1) + len(d2))
+    #fw = interleave_datasets([d1, d2], probabilities=[p_d1, 1-p_d1])
+
+    # V2: create three parts of interleaved datasets with the proportion of d2 increasing
+    # switch filenames for shard 0 (validation, part 1) and shard 97 (training, part 3) for more relevant instruct eval
+    # TODO: adjust for 100B dataset
+    d1_p1 = d1.select(range(8_500_000))
+    d1_p2 = d1.select(range(8_500_000, 9_550_000))
+    d1_p3 = d1.select(range(9_550_000, len(d1)))
+    d2_p1 = d2.select(range(150_000))
+    d2_p2 = d2.select(range(150_000, 500_000))
+    d2_p3 = d2.select(range(500_000, len(d2)))
+    d1_p1_prob = len(d1_p1) / (len(d1_p1) + len(d2_p1))
+    d1_p2_prob = len(d1_p2) / (len(d1_p2) + len(d2_p2))
+    d1_p3_prob = len(d1_p3) / (len(d1_p3) + len(d2_p3))
+    
+    fw = concatenate_datasets([
+        interleave_datasets([d1_p1, d2_p1], probabilities=[d1_p1_prob, 1-d1_p1_prob]),
+        interleave_datasets([d1_p2, d2_p2], probabilities=[d1_p2_prob, 1-d1_p2_prob]),
+        interleave_datasets([d1_p3, d2_p3], probabilities=[d1_p3_prob, 1-d1_p3_prob])
+    ])
     name = "edu_fineweb_hermes"
 
 # init the tokenizer
