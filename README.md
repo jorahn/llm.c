@@ -10,7 +10,7 @@ Run this first to setup the gpt2_tokenizer.bin:
   
 Finally run `scripts/run_gpt3_350M_edu_hermes.sh`  
   
-Training is stable with sufficiently large batch size (`-d 262144` -> gradient accumulation = 8)  
+Training is stable with sufficiently large batch size (`-d 524288` -> gradient accumulation = 16)  
 
 ---
 

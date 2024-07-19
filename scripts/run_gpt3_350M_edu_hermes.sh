@@ -2,13 +2,13 @@
 # 350M parameter model on 10B tokens
 # note context length: 1024 -> 2048 for GPT-3
 # => 6 * 350e6 * 10e9 ~= 2.1e19 capability model
-# 39,125 steps of 270,926 tokens/step
-# on 2X RTX4090 24GB steps in ~2,800ms/iter
-# => training time 39,125 * 2,800ms ~= 30 hours
+# 19,562 steps of 541,866 tokens/step
+# on 2X RTX4090 24GB steps in ~5,500ms/iter
+# => training time 19,562 * 5,500ms ~= 30 hours
 
 make train_gpt2cu USE_CUDNN=1
 out_dir="log_gpt3_350M_edu_hermes"
-done_file="$out_dir/DONE_00039125"
+done_file="$out_dir/DONE_00019562"
 while true; do
 
     # exit condition is that optimization has finished
@@ -26,7 +26,7 @@ while true; do
                 -v 250 -s 1000 -g 144 \
                 -h 1 \
                 -b 8 -t 2048 \
-                -d 262144 \
+                -d 524288 \
                 -r 0 \
                 -z 0 \
                 -c 0.1 \
@@ -36,7 +36,7 @@ while true; do
                 -n 1000 -nk 5 -nm 5000 \
                 -sl 7.0 -sg 7.0 \
                 -y 1 \
-                -x 39125 \
+                -x 19562 \
                 -e "gpt3:c1024"
 
     sleep 1
