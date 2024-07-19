@@ -1,4 +1,4 @@
-# GPT-3 (350M) repro on FineWeb-Edu
+# GPT-3 (350M) training on FineWeb-Edu + OpenHermes 2.5
 # 350M parameter model on 10B tokens
 # note context length: 1024 -> 2048 for GPT-3
 # => 6 * 350e6 * 10e9 ~= 2.1e19 capability model
@@ -8,7 +8,7 @@
 
 make train_gpt2cu USE_CUDNN=1
 out_dir="log_gpt3_350M_edu_hermes"
-done_file="$out_dir/DONE_00313004"
+done_file="$out_dir/DONE_00156502"
 while true; do
 
     # exit condition is that optimization has finished
@@ -23,18 +23,20 @@ while true; do
                 -i "dev/data/edu_fineweb10B_hermes/edu_fineweb_hermes_train_*.bin" \
                 -j "dev/data/edu_fineweb10B_hermes/edu_fineweb_hermes_val_*.bin" \
                 -o $out_dir \
-                -v 2000 -s 10000 -g 144 \
+                -v 1000 -s 5000 -g 144 \
                 -h 1 \
                 -b 8 -t 2048 \
-                -d 32768 \
+                -d 65536 \
                 -r 0 \
                 -z 0 \
                 -c 0.1 \
                 -l 0.0006 \
-                -q 0.0 \
-                -u 500 \
-                -n 10000 \
+                -q 0.1 \
+                -u 700 \
+                -n 5000 -nk 5 -nm 20000 \
+                -sl 7.0 -sg 7.0 \
                 -y 1 \
+                -x 156502 \
                 -e "gpt3:c1024"
 
     sleep 1

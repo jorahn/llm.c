@@ -60,13 +60,15 @@ elif args.type =="edu":
 
     # fineweb-edu 10B has 9.7M documents, OpenHermes-2.5_chatml has 1.0M documents
 
-    # V1: create one interleaved dataset with the same proportions as the original datasets
-    #p_d1 = len(d1) / (len(d1) + len(d2))
-    #fw = interleave_datasets([d1, d2], probabilities=[p_d1, 1-p_d1])
+    # create three parts of interleaved datasets with the proportion of d2 increasing
+    # Dataset proportions:
+    # Part 1: FWE 8,500,000 + OH 150,000 (1.73%) = 8,650,000
+    # Part 2: FWE 1,050,000 + OH 350,000 (25.00%) = 1,400,000
+    # Part 3: FWE 122,101 + OH 501,551 (80.42%) = 623,652
+    # Total documents: 10,672,621
 
-    # V2: create three parts of interleaved datasets with the proportion of d2 increasing
-    # switch filenames for shard 0 (validation, part 1) and shard 97 (training, part 3) for more relevant instruct eval
     # TODO: adjust for 100B dataset
+
     d1_p1 = d1.select(range(8_500_000))
     d1_p2 = d1.select(range(8_500_000, 9_550_000))
     d1_p3 = d1.select(range(9_550_000, len(d1)))
@@ -76,12 +78,19 @@ elif args.type =="edu":
     d1_p1_prob = len(d1_p1) / (len(d1_p1) + len(d2_p1))
     d1_p2_prob = len(d1_p2) / (len(d1_p2) + len(d2_p2))
     d1_p3_prob = len(d1_p3) / (len(d1_p3) + len(d2_p3))
-    
+
+    print("Dataset proportions:")
+    print(f"Part 1: FWE {len(d1_p1):,} + OH {len(d2_p1):,} ({1-d1_p1_prob:.2%}) = {len(d1_p1) + len(d2_p1):,}")
+    print(f"Part 2: FWE {len(d1_p2):,} + OH {len(d2_p2):,} ({1-d1_p2_prob:.2%}) = {len(d1_p2) + len(d2_p2):,}")
+    print(f"Part 3: FWE {len(d1_p3):,} + OH {len(d2_p3):,} ({1-d1_p3_prob:.2%}) = {len(d1_p3) + len(d2_p3):,}")
+
     fw = concatenate_datasets([
         interleave_datasets([d1_p1, d2_p1], probabilities=[d1_p1_prob, 1-d1_p1_prob]),
         interleave_datasets([d1_p2, d2_p2], probabilities=[d1_p2_prob, 1-d1_p2_prob]),
         interleave_datasets([d1_p3, d2_p3], probabilities=[d1_p3_prob, 1-d1_p3_prob])
     ])
+    print(f"Total documents: {len(fw):,}")
+
     name = "edu_fineweb_hermes"
 
 # init the tokenizer
@@ -103,7 +112,7 @@ eot = enc._special_tokens['<|endoftext|>']
 def tokenize(doc):
     # tokenizes a single document and returns a numpy array of uint16 tokens
     tokens = [eot] # the special <|endoftext|> token delimits all documents
-    tokens.extend(enc.encode_ordinary(doc["text"]))
+    tokens.extend(enc.encode(doc["text"], allowed_special="all")) # adjusted for chatml special tokens
     tokens_np = np.array(tokens)
     assert (0 <= tokens_np).all() and (tokens_np < 2**16).all(), "token dictionary too large for uint16"
     tokens_np_uint16 = tokens_np.astype(np.uint16)
@@ -130,7 +139,7 @@ with mp.Pool(nprocs) as pool:
             progress_bar.update(len(tokens))
         else:
             # write the current shard and start a new one
-            split = "val" if shard_index == 0 else "train"
+            split = "val" if shard_index == 100 else "train" # use shard 100 (from Part 3) as validation set
             filename = os.path.join(DATA_CACHE_DIR, f"{name}_{split}_{shard_index:06d}.bin")
             # split the document into whatever fits in this shard; the remainder goes to next one
             remainder = args.shard_size - token_count
@@ -145,6 +154,6 @@ with mp.Pool(nprocs) as pool:
 
     # write any remaining tokens as the last shard
     if token_count != 0:
-        split = "val" if shard_index == 0 else "train"
+        split = "val" if shard_index == 100 else "train" # use shard 100 (from Part 3) as validation set
         filename = os.path.join(DATA_CACHE_DIR, f"{name}_{split}_{shard_index:06d}.bin")
         write_datafile(filename, all_tokens_np[:token_count])
