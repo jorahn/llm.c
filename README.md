@@ -5,12 +5,13 @@
 - add instruction tokens `<|im_start|>` and `<|im_end|>` to tokenizer (`dev/data/..`, `train_gpt2.cu`/`.py`, `data/eval/export_hf.py`)
 - config for gpt-3 (2048 seq-len) 350M on 2x rtx4090 (instead of 8x a100 80g)
 
-Run this first to setup the gpt2_tokenizer.bin:  
-`python train_gpt2.py --input_bin "dev/data/edu_fineweb10B_hermes/edu_fineweb_hermes_train_*.bin" --input_val_bin "dev/data/edu_fineweb10B_hermes/edu_fineweb_hermes_val_*.bin" --model d24 --output_dir log_gpt3_350M_edu_hermes_py`  
+Run this first to setup the modified gpt2_tokenizer.bin: `python train_gpt2.py`  
   
 Finally run `scripts/run_gpt3_350M_edu_hermes.sh`  
   
-Training is stable with sufficiently large batch size (`-d 524288` -> gradient accumulation = 16)  
+TODO: 
+- Training is more stable with larger batch sizes (`-d 524288` -> gradient accumulation = 16 on my setup), but still doesn't converge.
+- `scripts/run_gpt3_350M_edu.sh` with the modified tokenizer but without instruct data doesn't show training instabilities.
 
 ---
 
