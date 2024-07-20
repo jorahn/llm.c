@@ -15,10 +15,13 @@ TODO:
 - `scripts/run_gpt3_350M_edu.sh` with the modified tokenizer but without instruct data doesn't show training instabilities.
 - reducing learning rate to 1e-6 doesn't resolve instabilities
 
-![loss issue](loss_issue.png)
+![loss issue fwedu hermes](loss_issue_edu_hermes.png)
 
 - training on openhermes without fineweb doesnt converge. maybe it's not the right dataset
 
+![loss issue hermes](loss_issue_hermes.png)
+
+- testing baai/infinity-instruct without fineweb next.
 
 ---
 
