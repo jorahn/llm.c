@@ -8,7 +8,7 @@
 
 make train_gpt2cu USE_CUDNN=1
 out_dir="log_gpt3_350M_edu"
-done_file="$out_dir/DONE_00018882"
+done_file="$out_dir/DONE_00018794"
 
 while true; do
 
@@ -18,11 +18,11 @@ while true; do
         break
     fi
 
-    # run python dev/data/fineweb.py --version 10B to prepro data
+    # run python dev/data/fineweb.py -t edu -v 10B to prepro data
     # run python dev/data/hellaswag.py to prepro hellaswag eval
     mpirun -np 2 ./train_gpt2cu \
-                -i "dev/data/edu_fineweb100B/edu_fineweb_train_*.bin" \
-                -j "dev/data/edu_fineweb100B/edu_fineweb_val_*.bin" \
+                -i "dev/data/edu_fineweb10B/edu_fineweb_train_*.bin" \
+                -j "dev/data/edu_fineweb10B/edu_fineweb_val_*.bin" \
                 -o $out_dir \
                 -v 250 -s 20000 -g 144 \
                 -h 1 \
@@ -36,7 +36,7 @@ while true; do
                 -u 700 \
                 -n 10000 \
                 -y 1 \
-                -x -1 \
+                -x 18794 \
                 -e "gpt3:c1024"
 
     sleep 1

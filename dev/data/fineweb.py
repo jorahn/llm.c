@@ -61,12 +61,23 @@ elif args.type =="edu":
     name = "edu_fineweb"
 
 # init the tokenizer
-enc = tiktoken.get_encoding("gpt2")
+gpt2_base = tiktoken.get_encoding("gpt2")
+enc = tiktoken.Encoding(
+    name="gpt2_im",
+    pat_str=gpt2_base._pat_str,
+    mergeable_ranks=gpt2_base._mergeable_ranks,
+    special_tokens={
+        **gpt2_base._special_tokens,
+        "<|im_start|>": 50257,
+        "<|im_end|>": 50258,
+    }
+)
 eot = enc._special_tokens['<|endoftext|>'] # end of text token
 def tokenize(doc):
     # tokenizes a single document and returns a numpy array of uint16 tokens
     tokens = [eot] # the special <|endoftext|> token delimits all documents
-    tokens.extend(enc.encode_ordinary(doc["text"]))
+    # tokens.extend(enc.encode_ordinary(doc["text"]))
+    tokens.extend(enc.encode(doc["text"], allowed_special="all")) # adjusted for chatml special tokens
     tokens_np = np.array(tokens)
     assert (0 <= tokens_np).all() and (tokens_np < 2**16).all(), "token dictionary too large for uint16"
     tokens_np_uint16 = tokens_np.astype(np.uint16)
