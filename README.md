@@ -7,7 +7,7 @@
 
 Run:
 - prepare the data with `python edu_fineweb_hermes.py` in `dev/data`
-- setup the modified gpt2_tokenizer.bin: `python train_gpt2.py`
+- setup the modified gpt2_tokenizer.bin: `python train_gpt2.py --model d24`
 - Finally run `bash scripts/run_gpt3_350M_edu_hermes.sh`
   
 TODO: 
