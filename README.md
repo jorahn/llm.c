@@ -10,10 +10,11 @@ Run:
 - setup the modified gpt2_tokenizer.bin: `python train_gpt2.py --model d24`
 - Finally run `bash scripts/run_gpt3_350M_edu_hermes.sh`
   
-TODO: 
-- Training is more stable with larger batch sizes (`-d 524288` -> gradient accumulation = 16 on my setup), but still doesn't converge.
-- `scripts/run_gpt3_350M_edu.sh` with the modified tokenizer but without instruct data doesn't show training instabilities.
-- reducing learning rate to 1e-6 doesn't resolve instabilities
+WIP: 
+- Training doesnt converge.
+- `scripts/run_gpt3_350M_edu.sh` with the modified tokenizer but without instruct data doesn't show training instabilities. 
+- Larger batch sizes help (`-d 524288` -> gradient accumulation = 16 on my setup) but insufficient.
+- Reducing learning rate to 1e-6 doesn't resolve instabilities
 
 ![loss issue fwedu hermes](loss_issue_edu_hermes.png)
 
@@ -24,6 +25,8 @@ TODO:
 - training on baai/infinity-instruct without fineweb next doesnt converge either..
 
 ![loss issue infinstruct](loss_issue_infinstruct.png)
+
+- test: let's make sure to filter all non-english samples to avoid tokenization issues
 
 ---
 
