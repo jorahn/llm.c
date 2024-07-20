@@ -17,6 +17,9 @@ TODO:
 
 ![loss issue](loss_issue.png)
 
+- training on openhermes without fineweb doesnt converge. maybe it's not the right dataset
+
+
 ---
 
 # llm.c
