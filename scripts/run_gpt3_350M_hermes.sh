@@ -7,8 +7,8 @@
 # => training time 19,577 * 5,500ms ~= 30 hours
 
 make train_gpt2cu USE_CUDNN=1
-out_dir="log_gpt3_350M_edu_hermes"
-done_file="$out_dir/DONE_00019577"
+out_dir="log_gpt3_350M_hermes"
+done_file="$out_dir/DONE_00000593"
 while true; do
 
     # exit condition is that optimization has finished
@@ -20,8 +20,8 @@ while true; do
     # run python dev/data/edu_fineweb_hermes.py to prepro data
     # run python dev/data/hellaswag.py to prepro hellaswag eval
     mpirun -np 2 ./train_gpt2cu \
-                -i "dev/data/edu_fineweb10B_hermes/edu_fineweb_hermes_train_*.bin" \
-                -j "dev/data/edu_fineweb10B_hermes/edu_fineweb_hermes_val_*.bin" \
+                -i "dev/data/hermes/hermes_train_*.bin" \
+                -j "dev/data/hermes/hermes_val_*.bin" \
                 -o $out_dir \
                 -v 250 -s 1000 -g 144 \
                 -h 1 \
@@ -36,7 +36,7 @@ while true; do
                 -n 1000 \
                 -sl 7.0 -sg 7.0 \
                 -y 1 \
-                -x 19577 \
+                -x 593 \
                 -e "gpt3:c1024"
 
     sleep 1
