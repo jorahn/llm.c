@@ -21,7 +21,9 @@ TODO:
 
 ![loss issue hermes](loss_issue_hermes.png)
 
-- testing baai/infinity-instruct without fineweb next.
+- training on baai/infinity-instruct without fineweb next doesnt converge either..
+
+![loss issue infinstruct](loss_issue_infinstruct.png)
 
 ---
 
