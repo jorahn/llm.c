@@ -13,7 +13,9 @@ Run:
 TODO: 
 - Training is more stable with larger batch sizes (`-d 524288` -> gradient accumulation = 16 on my setup), but still doesn't converge.
 - `scripts/run_gpt3_350M_edu.sh` with the modified tokenizer but without instruct data doesn't show training instabilities.
-- reducing learning rate to 1e-6 doesn't resolve instabilities 
+- reducing learning rate to 1e-6 doesn't resolve instabilities
+
+![loss issue](loss_issue.png)
 
 ---
 
