@@ -29,69 +29,60 @@ from tqdm import tqdm
 import argparse
 
 from data_common import write_datafile
+from chat_template import sharegpt_to_chatml
 # ------------------------------------------
 
-parser = argparse.ArgumentParser(description="FineWeb and Edu-FineWeb dataset preprocessing")
-parser.add_argument("-s", "--shard_size", type=int, default=10**8, help="Size of each data shard in the output .bin files, in tokens")
-args = parser.parse_args()
-
-# FineWeb has a few possible subsamples available
-args.version = "10B" # "100B"
-args.type = "edu" # "classic"
-directories = {
-    ("edu", "10B"): ("edu_fineweb10B_hermes", "sample-10BT"),
-    ("edu", "100B"): ("edu_fineweb100B_hermes", "sample-100BT")
-}
-local_dir, remote_name = directories[(args.type, args.version)]
+shard_size = 10**8
+fw_version = "10B" # "100B"
+local_dir = f"edu_fineweb{fw_version}_hermes"
+remote_name = f"sample-{fw_version}T"
 
 # create the cache the local directory if it doesn't exist yet
 DATA_CACHE_DIR = os.path.join(os.path.dirname(__file__), local_dir)
 os.makedirs(DATA_CACHE_DIR, exist_ok=True)
 
-# download the dataset
-if args.type == "classic":
-    fw = load_dataset("HuggingFaceFW/fineweb", name=remote_name, split="train")
-    name = "fineweb"
-elif args.type =="edu":
-    d1 = load_dataset("HuggingFaceFW/fineweb-edu", name=remote_name, split="train")
-    d1 = d1.select_columns(["text"])
-    d2 = load_dataset("jrahn/OpenHermes-2.5_chatml", split="train")
-    d2 = d2.select_columns(["text"])
+d1 = load_dataset("HuggingFaceFW/fineweb-edu", name=remote_name, split="train")
+d1 = d1.select_columns(["text"])
 
-    # fineweb-edu 10B has 9.7M documents, OpenHermes-2.5_chatml has 1.0M documents
+d2 = load_dataset("teknium/OpenHermes-2.5", split="train")
+d2 = d2.map(sharegpt_to_chatml)
+d2 = d2.select_columns(["text"])
 
-    # create three parts of interleaved datasets with the proportion of d2 increasing
-    # Dataset proportions:
-    # Part 1: FWE 8,500,000 + OH 150,000 (1.73%) = 8,650,000
-    # Part 2: FWE 1,050,000 + OH 350,000 (25.00%) = 1,400,000
-    # Part 3: FWE 122,101 + OH 501,551 (80.42%) = 623,652
-    # Total documents: 10,672,621
+# fineweb-edu 10B has 9.7M documents, OpenHermes-2.5 has 1.0M documents
 
-    # TODO: adjust for 100B dataset
+# create three parts of interleaved datasets with the proportion of d2 increasing
+# Dataset proportions:
+# Part 1: FWE 7,500,000 + OH 0 (0.00%) = 7,500,000
+# Part 2: FWE 2,050,000 + OH 500,000 (19.61%) = 2,550,000
+# Part 3: FWE 122,101 + OH 501,551 (80.42%) = 623,652
+# Total documents: 10,667,043
 
-    d1_p1 = d1.select(range(8_500_000))
-    d1_p2 = d1.select(range(8_500_000, 9_550_000))
-    d1_p3 = d1.select(range(9_550_000, len(d1)))
-    d2_p1 = d2.select(range(150_000))
-    d2_p2 = d2.select(range(150_000, 500_000))
-    d2_p3 = d2.select(range(500_000, len(d2)))
-    d1_p1_prob = len(d1_p1) / (len(d1_p1) + len(d2_p1))
-    d1_p2_prob = len(d1_p2) / (len(d1_p2) + len(d2_p2))
-    d1_p3_prob = len(d1_p3) / (len(d1_p3) + len(d2_p3))
+# TODO: adjust for 100B dataset
 
-    print("Dataset proportions:")
-    print(f"Part 1: FWE {len(d1_p1):,} + OH {len(d2_p1):,} ({1-d1_p1_prob:.2%}) = {len(d1_p1) + len(d2_p1):,}")
-    print(f"Part 2: FWE {len(d1_p2):,} + OH {len(d2_p2):,} ({1-d1_p2_prob:.2%}) = {len(d1_p2) + len(d2_p2):,}")
-    print(f"Part 3: FWE {len(d1_p3):,} + OH {len(d2_p3):,} ({1-d1_p3_prob:.2%}) = {len(d1_p3) + len(d2_p3):,}")
+d1_p1 = d1.select(range(7_500_000))
+d1_p2 = d1.select(range(7_500_000, 9_550_000))
+d1_p3 = d1.select(range(9_550_000, len(d1)))
+#d2_p1 = d2.select(range(150_000))
+d2_p2 = d2.select(range(500_000))
+d2_p3 = d2.select(range(500_000, len(d2)))
+d1_p1_prob = len(d1_p1) / (len(d1_p1) + 0)
+d1_p2_prob = len(d1_p2) / (len(d1_p2) + len(d2_p2))
+d1_p3_prob = len(d1_p3) / (len(d1_p3) + len(d2_p3))
 
-    fw = concatenate_datasets([
-        interleave_datasets([d1_p1, d2_p1], probabilities=[d1_p1_prob, 1-d1_p1_prob]),
-        interleave_datasets([d1_p2, d2_p2], probabilities=[d1_p2_prob, 1-d1_p2_prob]),
-        interleave_datasets([d1_p3, d2_p3], probabilities=[d1_p3_prob, 1-d1_p3_prob])
-    ])
-    print(f"Total documents: {len(fw):,}")
+print("Dataset proportions:")
+print(f"Part 1: FWE {len(d1_p1):,} + OH {0:,} ({1-d1_p1_prob:.2%}) = {len(d1_p1) + 0:,}")
+print(f"Part 2: FWE {len(d1_p2):,} + OH {len(d2_p2):,} ({1-d1_p2_prob:.2%}) = {len(d1_p2) + len(d2_p2):,}")
+print(f"Part 3: FWE {len(d1_p3):,} + OH {len(d2_p3):,} ({1-d1_p3_prob:.2%}) = {len(d1_p3) + len(d2_p3):,}")
 
-    name = "edu_fineweb_hermes"
+ds = concatenate_datasets([
+    d1_p1,
+    #interleave_datasets([d1_p1, d2_p1], probabilities=[d1_p1_prob, 1-d1_p1_prob]),
+    interleave_datasets([d1_p2, d2_p2], probabilities=[d1_p2_prob, 1-d1_p2_prob]),
+    interleave_datasets([d1_p3, d2_p3], probabilities=[d1_p3_prob, 1-d1_p3_prob])
+])
+print(f"Total documents: {len(ds):,}")
+
+name = "edu_fineweb_hermes"
 
 # init the tokenizer
 gpt2_base = tiktoken.get_encoding("gpt2")
@@ -123,26 +114,26 @@ nprocs = max(1, os.cpu_count() - 2) # don't hog the entire system
 with mp.Pool(nprocs) as pool:
     shard_index = 0
     # preallocate buffer to hold current shard
-    all_tokens_np = np.empty((args.shard_size,), dtype=np.uint16)
+    all_tokens_np = np.empty((shard_size,), dtype=np.uint16)
     token_count = 0
     progress_bar = None
-    for tokens in pool.imap(tokenize, fw, chunksize=16):
+    for tokens in pool.imap(tokenize, ds, chunksize=16):
 
         # is there enough space in the current shard for the new tokens?
-        if token_count + len(tokens) < args.shard_size:
+        if token_count + len(tokens) < shard_size:
             # simply append tokens to current shard
             all_tokens_np[token_count:token_count+len(tokens)] = tokens
             token_count += len(tokens)
             # update progress bar
             if progress_bar is None:
-                progress_bar = tqdm(total=args.shard_size, unit="tokens", desc=f"Shard {shard_index}")
+                progress_bar = tqdm(total=shard_size, unit="tokens", desc=f"Shard {shard_index}")
             progress_bar.update(len(tokens))
         else:
             # write the current shard and start a new one
             split = "val" if shard_index == 100 else "train" # use shard 100 (from Part 3) as validation set
             filename = os.path.join(DATA_CACHE_DIR, f"{name}_{split}_{shard_index:06d}.bin")
             # split the document into whatever fits in this shard; the remainder goes to next one
-            remainder = args.shard_size - token_count
+            remainder = shard_size - token_count
             progress_bar.update(remainder)
             all_tokens_np[token_count:token_count+remainder] = tokens[:remainder]
             write_datafile(filename, all_tokens_np)

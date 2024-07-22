@@ -19,9 +19,3 @@ def sharegpt_to_chatml(example):
         chatml_conversations.append(chatml_format)
     formatted = tokenizer.apply_chat_template(chatml_conversations, tokenize=False, add_generation_prompt=False)
     return {"text": formatted}
-
-ds = load_dataset("BAAI/Infinity-Instruct", "0625", split="train")
-ds = ds.map(sharegpt_to_chatml)
-ds = ds.select_columns(["text"])
-
-ds.push_to_hub("jrahn/Infinity-Instruct_chatml")

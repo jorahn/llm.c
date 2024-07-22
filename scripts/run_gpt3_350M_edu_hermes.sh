@@ -8,7 +8,7 @@
 
 make train_gpt2cu USE_CUDNN=1
 out_dir="log_gpt3_350M_edu_hermes"
-done_file="$out_dir/DONE_00019577"
+done_file="$out_dir/DONE_00019565"
 while true; do
 
     # exit condition is that optimization has finished
@@ -30,13 +30,13 @@ while true; do
                 -r 0 \
                 -z 1 \
                 -c 0.1 \
-                -l 0.0006 \
+                -l 0.0002 \
                 -q 0.0 \
                 -u 700 \
                 -n 1000 \
                 -sl 7.0 -sg 7.0 \
                 -y 1 \
-                -x 19577 \
+                -x 19565 \
                 -e "gpt3:c1024"
 
     sleep 1
