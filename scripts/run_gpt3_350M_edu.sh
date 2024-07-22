@@ -24,17 +24,18 @@ while true; do
                 -i "dev/data/edu_fineweb10B/edu_fineweb_train_*.bin" \
                 -j "dev/data/edu_fineweb10B/edu_fineweb_val_*.bin" \
                 -o $out_dir \
-                -v 250 -s 20000 -g 144 \
+                -v 250 -s 1000 -g 144 \
                 -h 1 \
                 -b 8 -t 2048 \
                 -d 524288 \
                 -r 0 \
                 -z 1 \
                 -c 0.1 \
-                -l 0.0003 \
+                -l 0.0002 \
                 -q 0.0 \
                 -u 700 \
-                -n 10000 \
+                -n 1000 \
+                -sl 7.0 -sg 7.0 \
                 -y 1 \
                 -x 18794 \
                 -e "gpt3:c1024"
