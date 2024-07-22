@@ -24,11 +24,12 @@ import argparse
 import multiprocessing as mp
 import numpy as np
 import tiktoken
-from datasets import load_dataset, concatenate_datasets, interleave_datasets
+from datasets import load_dataset
 from tqdm import tqdm
 import argparse
 
 from data_common import write_datafile
+from chat_template import sharegpt_to_chatml
 # ------------------------------------------
 
 local_dir = "hermes"
@@ -39,7 +40,8 @@ DATA_CACHE_DIR = os.path.join(os.path.dirname(__file__), local_dir)
 os.makedirs(DATA_CACHE_DIR, exist_ok=True)
 
 # download the dataset
-ds = load_dataset("jrahn/OpenHermes-2.5_chatml", split="train")
+ds = load_dataset("teknium/OpenHermes-2.5", split="train")
+ds = ds.map(sharegpt_to_chatml)
 ds = ds.select_columns(["text"])
 name = "hermes"
 

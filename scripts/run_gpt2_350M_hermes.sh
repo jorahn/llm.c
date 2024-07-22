@@ -7,7 +7,7 @@
 # => training time 19,577 * 5,500ms ~= 30 hours
 
 make train_gpt2cu USE_CUDNN=1
-out_dir="log_gpt3_350M_hermes"
+out_dir="log_gpt2_350M_hermes"
 done_file="$out_dir/DONE_00000593"
 while true; do
 
@@ -25,7 +25,7 @@ while true; do
                 -o $out_dir \
                 -v 250 -s 1000 -g 144 \
                 -h 1 \
-                -b 8 -t 2048 \
+                -b 8 -t 1024 \
                 -d 524288 \
                 -r 0 \
                 -z 1 \
@@ -37,7 +37,7 @@ while true; do
                 -sl 7.0 -sg 7.0 \
                 -y 1 \
                 -x 593 \
-                -e "gpt3:c1024"
+                -e "d24"
 
     sleep 1
 done

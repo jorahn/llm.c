@@ -1808,6 +1808,14 @@ int main(int argc, char *argv[]) {
             gpt2_forward(&model, train_loader.inputs, B, T);
             // backward pass. all model params accumulate gradients with += inside this inner loop
             gpt2_backward_and_reduce(&model, train_loader.inputs, train_loader.targets, grad_accum_steps, micro_step);
+            // confirm token ids are correct
+            //for (int i = 0; i < 2048; i++) {
+            //    printf("train data %d: %d\n", i, train_loader.inputs[i]);
+            //}
+            //for (int i = 0; i < B; i++) {
+            //    printf("train target %d: %d\n", i, train_loader.inputs[i]);
+            //}
+            //getchar();
         }
         float zloss = (float)(update_detector(&loss_outlier_detector, (double)model.mean_loss)); // loss z-score
         // fetch the next learning rate
