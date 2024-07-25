@@ -1,4 +1,5 @@
 *.ipynb_checkpoints*
+log_gpt*
 
 # dot files and such
 .vscode
