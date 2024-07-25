@@ -8,7 +8,7 @@
 
 make train_gpt2cu USE_CUDNN=1
 out_dir="log_gpt2_350M_edu_hermes"
-done_file="$out_dir/DONE_00019565"
+done_file="$out_dir/DONE_00009782"
 while true; do
 
     # exit condition is that optimization has finished
@@ -25,18 +25,18 @@ while true; do
                 -o $out_dir \
                 -v 250 -s 1000 -g 144 \
                 -h 1 \
-                -b 8 -t 1024 \
-                -d 524288 \
+                -b 16 -t 1024 \
+                -d 1048576 \
                 -r 0 \
                 -z 1 \
                 -c 0.1 \
-                -l 0.0002 \
+                -l 0.0006 \
                 -q 0.0 \
                 -u 700 \
                 -n 1000 \
                 -sl 7.0 -sg 7.0 \
                 -y 1 \
-                -x 19565 \
+                -x 9782 \
                 -e "d24"
 
     sleep 1

@@ -20,13 +20,13 @@ while true; do
 
     # run python dev/data/fineweb.py --version 100B to prepro data
     # run python dev/data/hellaswag.py to prepro hellaswag eval
-    mpirun -np 8 ./train_gpt2cu \
-                -i "dev/data/fineweb100B/fineweb_train_*.bin" \
-                -j "dev/data/fineweb100B/fineweb_val_*.bin" \
+    mpirun -np 2 ./train_gpt2cu \
+                -i "dev/data/edu_fineweb10B/edu_fineweb_train_*.bin" \
+                -j "dev/data/edu_fineweb10B/edu_fineweb_val_*.bin" \
                 -o $out_dir \
-                -v 250 -s 100000 -g 144 \
+                -v 250 -s 2000 -g 144 \
                 -h 1 \
-                -b 64 -t 1024 \
+                -b 16 -t 1024 \
                 -d 524288 \
                 -r 0 \
                 -z 1 \
